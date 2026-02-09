@@ -1,4 +1,3 @@
-import { Route, Routes, BrowserRouter } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import Main from "./components/main/Main";
 import GlobalStyles from "./core-ui/Globals";
@@ -35,7 +34,6 @@ function App() {
   });
 
   const [searchedLocation, setSearchedLocation] = useState("Tbilisi");
-  const [searchDone, setSearchDone] = useState(false);
   const [theme, setTheme] = useState("clear");
   const [formValue, setFormValue] = useState({ searchedLocation: "" });
   const [formError, setFormError] = useState({});
@@ -65,28 +63,20 @@ function App() {
   };
 
   // ---------------- THEME ----------------
-  const setWeatherTheme =
-    theme === "rain"
-      ? rain
-      : theme === "clouds"
-      ? clouds
-      : theme === "clear"
-      ? clear
-      : theme === "thunderstorm"
-      ? thunderstorm
-      : theme === "snow"
-      ? snow
-      : theme === "drizzle"
-      ? drizzle
-      : theme === "mist"
-      ? mist
-      : theme === "smoke"
-      ? smoke
-      : theme === "haze"
-      ? haze
-      : theme === "fog"
-      ? fog
-      : defaultWeather;
+  const themeMap = {
+    rain,
+    clouds,
+    clear,
+    thunderstorm,
+    snow,
+    drizzle,
+    mist,
+    smoke,
+    fog,
+    haze,
+  };
+
+  const setWeatherTheme = themeMap[theme] || defaultWeather;
 
   // ---------------- FETCH WEATHER ----------------
   useEffect(() => {
@@ -97,7 +87,6 @@ function App() {
         setLoading(true);
         setNoData(false);
 
-        // 1️⃣ GEO
         const geoRes = await fetch(
           `https://api.openweathermap.org/geo/1.0/direct?q=${searchedLocation}&limit=1&appid=${WEATHER_KEY}`
         );
@@ -105,13 +94,11 @@ function App() {
 
         if (!geoData.length) {
           setNoData(true);
-          setLoading(false);
           return;
         }
 
         const { lat, lon, name, country } = geoData[0];
 
-        // 2️⃣ WEATHER
         const weatherRes = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_KEY}&units=metric`
         );
@@ -130,8 +117,6 @@ function App() {
           highest: data.main.temp_max,
           lowest: data.main.temp_min,
         });
-
-        setSearchDone(true);
       } catch (err) {
         console.error(err);
         setNoData(true);
@@ -152,26 +137,17 @@ function App() {
   // ---------------- RENDER ----------------
   return (
     <ThemeProvider theme={setWeatherTheme}>
-      <BrowserRouter>
-        <GlobalStyles />
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Main
-                theme={theme}
-                noData={noData}
-                loading={loading}
-                formError={formError}
-                formValue={formValue}
-                todayWeather={todayWeather}
-                handleSubmit={handleSubmit}
-                handleValidation={handleValidation}
-              />
-            }
-          />
-        </Routes>
-      </BrowserRouter>
+      <GlobalStyles />
+      <Main
+        theme={theme}
+        noData={noData}
+        loading={loading}
+        formError={formError}
+        formValue={formValue}
+        todayWeather={todayWeather}
+        handleSubmit={handleSubmit}
+        handleValidation={handleValidation}
+      />
     </ThemeProvider>
   );
 }
